@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Room — ResQ</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    .control-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .header-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: #0f172a;
+      color: #f8fafc;
+      flex-shrink: 0;
+    }
+    .header-bar h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    .back-btn {
+      color: #e2e8f0;
+      text-decoration: none;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      background: #1e293b;
+    }
+    .control-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .sidebar {
+      width: 300px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 0.75rem;
+      box-sizing: border-box;
+    }
+    .sidebar-section h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+    .sidebar-section + .sidebar-section {
+      margin-top: 1.25rem;
+    }
+    .request-card, .resource-card {
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .request-card .type {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .meta {
+      color: #cbd5e1;
+    }
+    .map-pane {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    #recommendationPanel,
+    #replanPanel {
+      display: none;
+      position: absolute;
+      z-index: 1000;
+      max-width: 360px;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    #recommendationPanel {
+      top: 12px;
+      right: 12px;
+      background: #ecfeff;
+      border: 1px solid #22d3ee;
+      color: #164e63;
+    }
+    #replanPanel {
+      bottom: 12px;
+      right: 12px;
+      background: #fff7ed;
+      border: 1px solid #fb923c;
+      color: #9a3412;
+    }
+    .empty {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="control-layout">
+    <header class="header-bar">
+      <a class="back-btn" href="/">← Back</a>
+      <h1>🎛️ Control Room</h1>
+    </header>
+
+    <div class="control-body">
+      <aside class="sidebar">
+        <section class="sidebar-section">
+          <h2>📋 Requests</h2>
+          <div id="requestsList"><p class="empty">Loading requests…</p></div>
+        </section>
+        <section class="sidebar-section">
+          <h2>🚁 Resources</h2>
+          <div id="resourcesList"><p class="empty">No resources yet.</p></div>
+        </section>
+      </aside>
+
+      <div class="map-pane">
+        <div id="map"></div>
+        <div id="recommendationPanel"></div>
+        <div id="replanPanel"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+  <script>
+    const map = L.map("map").setView([20.2961, 85.8245], 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    const markers = { requests: {}, resources: {} };
+
+    function field(obj, keys, fallback = "—") {
+      for (const key of keys) {
+        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+          return obj[key];
+        }
+      }
+      return fallback;
+    }
+
+    function coords(item) {
+      const lat = Number(field(item, ["lat", "latitude"], NaN));
+      const lng = Number(field(item, ["lng", "lon", "longitude"], NaN));
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return [lat, lng];
+      return null;
+    }
+
+    function itemId(item, keys) {
+      const id = field(item, keys, "");
+      return id === "—" || id === "" ? "" : String(id);
+    }
+
+    function priorityColor(priority) {
+      const score = Number(priority);
+      if (score > 8) return "red";
+      if (score > 6) return "orange";
+      if (score > 4) return "yellow";
+      return "green";
+    }
+
+    function statusColor(status) {
+      const value = String(status).toLowerCase();
+      if (value === "available") return "green";
+      if (value === "assigned") return "yellow";
+      if (value === "busy") return "red";
+      return "gray";
+    }
+
+    function resourceIcon(color) {
+      return L.divIcon({
+        className: "resource-marker",
+        html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 0 1px ${color}"></span>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+    }
+
+    function pruneMarkers(dict, seenIds) {
+      Object.keys(dict).forEach((id) => {
+        if (!seenIds.has(id)) {
+          map.removeLayer(dict[id]);
+          delete dict[id];
+        }
+      });
+    }
+
+    async function getRecommendation(requestId) {
+      const panel = document.getElementById("recommendationPanel");
+      panel.style.display = "block";
+      panel.innerHTML = "<strong>AI suggestion</strong><p>Loading…</p>";
+      try {
+        const res = await fetch(`/api/recommend/${encodeURIComponent(requestId)}`);
+        if (!res.ok) throw new Error("No recommendation available");
+        const data = await res.json();
+        const text = data.recommendation || data.message || JSON.stringify(data);
+        panel.innerHTML = `<strong>AI suggestion</strong><p>${text}</p>`;
+      } catch (err) {
+        panel.innerHTML = `<strong>AI suggestion</strong><p>${err.message}</p>`;
+      }
+    }
+
+    function upsertRequestMarker(req) {
+      const id = itemId(req, ["id", "request_id"]);
+      const pos = coords(req);
+      if (!id || !pos) return;
+
+      const type = field(req, ["type", "request_type", "kind"]);
+      const people = field(req, ["people", "people_count", "num_people", "count"]);
+      const priority = field(req, ["priority_score", "priority", "score"]);
+      const vulnerability = field(req, ["vulnerability", "vulnerable", "vulnerability_score"]);
+      const color = priorityColor(priority);
+      const popup = `Type: ${type}<br>People: ${people}<br>Priority: ${priority}<br>Vulnerability: ${vulnerability}`;
+
+      const existing = markers.requests[id];
+      if (existing) {
+        existing.setLatLng(pos);
+        existing.setStyle({ color, fillColor: color });
+        existing.setPopupContent(popup);
+        return;
+      }
+
+      const marker = L.circleMarker(pos, {
+        radius: 10,
+        color,
+        fillColor: color,
+        fillOpacity: 0.75,
+        weight: 2,
+      }).addTo(map);
+      marker.bindPopup(popup);
+      marker.on("click", () => getRecommendation(id));
+      markers.requests[id] = marker;
+    }
+
+    function upsertResourceMarker(res) {
+      const id = itemId(res, ["id", "resource_id"]);
+      const pos = coords(res);
+      if (!id || !pos) return;
+
+      const name = field(res, ["name"]);
+      const type = field(res, ["type", "kind"]);
+      const capacity = field(res, ["capacity"]);
+      const status = field(res, ["status", "state"], "available");
+      const color = statusColor(status);
+      const popup = `Name: ${name}<br>Type: ${type}<br>Capacity: ${capacity}<br>Status: ${status}`;
+
+      const existing = markers.resources[id];
+      if (existing) {
+        existing.setLatLng(pos);
+        existing.setIcon(resourceIcon(color));
+        existing.setPopupContent(popup);
+        return;
+      }
+
+      const marker = L.marker(pos, { icon: resourceIcon(color) }).addTo(map);
+      marker.bindPopup(popup);
+      markers.resources[id] = marker;
+    }
+
+    function renderRequests(requests) {
+      const list = document.getElementById("requestsList");
+      const seen = new Set();
+
+      if (!requests || requests.length === 0) {
+        list.innerHTML = '<p class="empty">No active requests.</p>';
+        pruneMarkers(markers.requests, seen);
+        return;
+      }
+
+      list.innerHTML = requests.map((req) => {
+        const id = itemId(req, ["id", "request_id"]);
+        if (id) seen.add(id);
+        upsertRequestMarker(req);
+
+        const type = field(req, ["type", "request_type", "kind"]);
+        const people = field(req, ["people", "people_count", "num_people", "count"]);
+        const priority = field(req, ["priority_score", "priority", "score"]);
+        const vulnerability = field(req, ["vulnerability", "vulnerable", "vulnerability_score"]);
+        return `
+          <article class="request-card">
+            <div class="type">${type}</div>
+            <div class="meta">People: ${people}</div>
+            <div class="meta">Priority: ${priority}</div>
+            <div class="meta">Vulnerability: ${vulnerability}</div>
+          </article>
+        `;
+      }).join("");
+
+      pruneMarkers(markers.requests, seen);
+    }
+
+    function renderResources(resources) {
+      const list = document.getElementById("resourcesList");
+      const seen = new Set();
+
+      if (!resources || resources.length === 0) {
+        list.innerHTML = '<p class="empty">No resources available.</p>';
+        pruneMarkers(markers.resources, seen);
+        return;
+      }
+
+      list.innerHTML = resources.map((res) => {
+        const id = itemId(res, ["id", "resource_id"]);
+        if (id) seen.add(id);
+        upsertResourceMarker(res);
+
+        const name = field(res, ["name", "type", "id"]);
+        const type = field(res, ["type", "kind"]);
+        const capacity = field(res, ["capacity"]);
+        const status = field(res, ["status", "state"], "available");
+        return `
+          <article class="resource-card">
+            <div class="type">${name}</div>
+            <div class="meta">Type: ${type}</div>
+            <div class="meta">Capacity: ${capacity}</div>
+            <div class="meta">Status: ${status}</div>
+          </article>
+        `;
+      }).join("");
+
+      pruneMarkers(markers.resources, seen);
+    }
+
+    async function pollRequests() {
+      try {
+        const res = await fetch("/api/requests");
+        if (!res.ok) throw new Error("Failed to load requests");
+        const data = await res.json();
+        const requests = Array.isArray(data) ? data : (data.requests || []);
+        renderRequests(requests);
+      } catch (err) {
+        document.getElementById("requestsList").innerHTML =
+          `<p class="empty">${err.message}</p>`;
+      }
+    }
+
+    async function pollResources() {
+      try {
+        const res = await fetch("/api/resources");
+        if (!res.ok) return;
+        const data = await res.json();
+        const resources = Array.isArray(data) ? data : (data.resources || []);
+        renderResources(resources);
+      } catch (_) {
+        /* resources endpoint is optional */
+      }
+    }
+
+    function refresh() {
+      pollRequests();
+      pollResources();
+    }
+
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>
