@@ -1,24 +1,34 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Control Room — ResQ</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin="" />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
   <link rel="stylesheet" href="/static/style.css" />
+
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       height: 100%;
       overflow: hidden;
     }
+
     .control-layout {
       display: flex;
       flex-direction: column;
       height: 100%;
     }
+
     .header-bar {
       display: flex;
       align-items: center;
@@ -28,10 +38,12 @@
       color: #f8fafc;
       flex-shrink: 0;
     }
+
     .header-bar h1 {
       margin: 0;
       font-size: 1.25rem;
     }
+
     .back-btn {
       color: #e2e8f0;
       text-decoration: none;
@@ -40,11 +52,29 @@
       padding: 0.35rem 0.75rem;
       background: #1e293b;
     }
+
+    /* NEW */
+    .road-block-btn {
+      margin-left: auto;
+      border: 0;
+      border-radius: 7px;
+      padding: 0.55rem 0.9rem;
+      background: #dc2626;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .road-block-btn:hover {
+      background: #b91c1c;
+    }
+
     .control-body {
       display: flex;
       flex: 1;
       min-height: 0;
     }
+
     .sidebar {
       width: 300px;
       flex-shrink: 0;
@@ -54,42 +84,52 @@
       padding: 0.75rem;
       box-sizing: border-box;
     }
+
     .sidebar-section h2 {
       margin: 0 0 0.5rem;
       font-size: 1rem;
     }
+
     .sidebar-section + .sidebar-section {
       margin-top: 1.25rem;
     }
-    .request-card, .resource-card {
+
+    .request-card,
+    .resource-card {
       background: #1f2937;
       border-radius: 8px;
       padding: 0.6rem 0.75rem;
       margin-bottom: 0.5rem;
       font-size: 0.85rem;
     }
+
     .request-card .type {
       font-weight: 600;
       margin-bottom: 0.25rem;
     }
+
     .meta {
       color: #cbd5e1;
     }
+
     .map-pane {
       flex: 1;
       min-width: 0;
       position: relative;
     }
+
     #map {
       height: 100%;
       width: 100%;
     }
+
     #recommendationPanel,
     #replanPanel {
       display: none;
       position: absolute;
       z-index: 1000;
     }
+
     #recommendationPanel {
       top: 12px;
       right: 12px;
@@ -97,21 +137,154 @@
       max-height: calc(100% - 24px);
       overflow: auto;
     }
+
+    /* REPLAN PANEL */
+
     #replanPanel {
       bottom: 12px;
       right: 12px;
-      max-width: 360px;
-      padding: 0.85rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-      background: #fff7ed;
-      border: 1px solid #fb923c;
-      color: #9a3412;
+      width: min(620px, calc(100% - 24px));
+      max-height: calc(100% - 24px);
+      overflow-y: auto;
+      padding: 0;
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      background: white;
+      border: 2px solid #f97316;
+      color: #0f172a;
     }
+
+    .replan-header {
+      background: #fff7ed;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #fed7aa;
+    }
+
+    .replan-header h3 {
+      margin: 0;
+      color: #c2410c;
+      font-size: 1.05rem;
+    }
+
+    .replan-trigger {
+      margin-top: 0.3rem;
+      font-size: 0.82rem;
+      color: #9a3412;
+      font-weight: 600;
+    }
+
+    .plan-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+    }
+
+    .plan-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.7rem;
+      background: #f8fafc;
+    }
+
+    .plan-box.new-plan {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+
+    .plan-box h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #475569;
+    }
+
+    .plan-box.new-plan h4 {
+      color: #15803d;
+    }
+
+    .plan-content {
+      font-size: 0.84rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .impact-section {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .impact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .impact-card {
+      background: #f8fafc;
+      border-radius: 7px;
+      padding: 0.6rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .impact-label {
+      font-size: 0.72rem;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .impact-value {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+
+    .explanation {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #e2e8f0;
+      color: #334155;
+      line-height: 1.45;
+      font-size: 0.85rem;
+    }
+
+    .replan-actions {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.8rem 1rem 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .replan-actions button {
+      flex: 1;
+      border: 0;
+      border-radius: 7px;
+      padding: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #approveReplanBtn {
+      background: #16a34a;
+      color: white;
+    }
+
+    #rejectReplanBtn {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    #approveReplanBtn:disabled,
+    #rejectReplanBtn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     .empty {
       color: #94a3b8;
       font-size: 0.85rem;
     }
+
     .rec-card {
       background: #fff;
       color: #0f172a;
@@ -121,21 +294,25 @@
       overflow: hidden;
       font-size: 0.88rem;
     }
+
     .rec-card header {
       background: #0f766e;
       color: #f0fdfa;
       padding: 0.85rem 1rem;
     }
+
     .rec-card header h3 {
       margin: 0 0 0.25rem;
       font-size: 1rem;
     }
+
     .rec-match {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       gap: 0.75rem;
     }
+
     .rec-score {
       font-weight: 700;
       background: #ccfbf1;
@@ -144,10 +321,12 @@
       padding: 0.15rem 0.6rem;
       white-space: nowrap;
     }
+
     .rec-section {
       padding: 0.85rem 1rem;
       border-top: 1px solid #e2e8f0;
     }
+
     .rec-section h4 {
       margin: 0 0 0.55rem;
       font-size: 0.78rem;
@@ -155,10 +334,12 @@
       text-transform: uppercase;
       color: #64748b;
     }
+
     .factor-table {
       width: 100%;
       border-collapse: collapse;
     }
+
     .factor-table th,
     .factor-table td {
       padding: 0.4rem 0.35rem;
@@ -166,17 +347,20 @@
       vertical-align: middle;
       border-bottom: 1px solid #f1f5f9;
     }
+
     .factor-table th {
       font-size: 0.72rem;
       color: #64748b;
       font-weight: 600;
     }
+
     .score-cell {
       display: flex;
       align-items: center;
       gap: 0.4rem;
       min-width: 110px;
     }
+
     .bar {
       flex: 1;
       height: 8px;
@@ -184,17 +368,20 @@
       border-radius: 999px;
       overflow: hidden;
     }
+
     .bar > span {
       display: block;
       height: 100%;
       background: linear-gradient(90deg, #14b8a6, #0f766e);
       border-radius: 999px;
     }
+
     .alt-list {
       list-style: none;
       margin: 0;
       padding: 0;
     }
+
     .alt-list li {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
@@ -202,19 +389,23 @@
       padding: 0.5rem 0.65rem;
       margin-bottom: 0.4rem;
     }
+
     .alt-list strong {
       display: block;
     }
+
     .rec-explanation {
       margin: 0;
       line-height: 1.45;
       color: #334155;
     }
+
     .rec-actions {
       display: flex;
       gap: 0.5rem;
       padding: 0.85rem 1rem 1rem;
     }
+
     .rec-actions button {
       flex: 1;
       border: 0;
@@ -223,19 +414,23 @@
       font-weight: 600;
       cursor: pointer;
     }
+
     #approveBtn {
       background: #059669;
       color: #fff;
     }
+
     #rejectBtn {
       background: #fee2e2;
       color: #991b1b;
     }
+
     #approveBtn:disabled,
     #rejectBtn:disabled {
       opacity: 0.55;
       cursor: not-allowed;
     }
+
     .toast {
       display: none;
       position: fixed;
@@ -250,105 +445,157 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
       font-weight: 600;
     }
+
+    @media (max-width: 700px) {
+      .plan-container {
+        grid-template-columns: 1fr;
+      }
+
+      .header-bar h1 {
+        font-size: 1rem;
+      }
+
+      .road-block-btn {
+        font-size: 0.75rem;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="control-layout">
+
     <header class="header-bar">
       <a class="back-btn" href="/">← Back</a>
+
       <h1>🎛️ Control Room</h1>
+
+      <!-- NEW -->
+      <button
+        id="reportRoadBlockBtn"
+        class="road-block-btn"
+        type="button"
+      >
+        🚧 Report Road Block
+      </button>
     </header>
 
     <div class="control-body">
+
       <aside class="sidebar">
+
         <section class="sidebar-section">
           <h2>📋 Requests</h2>
-          <div id="requestsList"><p class="empty">Loading requests…</p></div>
+          <div id="requestsList">
+            <p class="empty">Loading requests…</p>
+          </div>
         </section>
+
         <section class="sidebar-section">
           <h2>🚁 Resources</h2>
-          <div id="resourcesList"><p class="empty">No resources yet.</p></div>
+          <div id="resourcesList">
+            <p class="empty">No resources yet.</p>
+          </div>
         </section>
+
       </aside>
 
       <div class="map-pane">
+
         <div id="map"></div>
+
         <div id="recommendationPanel"></div>
+
+        <!-- NEW REPLAN PANEL -->
         <div id="replanPanel"></div>
+
       </div>
     </div>
   </div>
+
   <div id="toast" class="toast" role="status"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-          crossorigin=""></script>
-  <script>
-    const map = L.map("map").setView([20.2961, 85.8245], 12);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(map);
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-    const markers = { requests: {}, resources: {} };
+  <script>
+
+    /* =========================================================
+       MAP INITIALIZATION
+    ========================================================= */
+
+    const map = L.map("map").setView([20.2961, 85.8245], 12);
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+      }
+    ).addTo(map);
+
+
+    /* =========================================================
+       MARKER STORAGE
+    ========================================================= */
+
+    const markers = {
+      requests: {},
+      resources: {},
+      roadBlocks: {}
+    };
+
+
+    /* =========================================================
+       HELPERS
+    ========================================================= */
 
     function field(obj, keys, fallback = "—") {
       for (const key of keys) {
-        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+        if (
+          obj[key] !== undefined &&
+          obj[key] !== null &&
+          obj[key] !== ""
+        ) {
           return obj[key];
         }
       }
+
       return fallback;
     }
 
+
     function coords(item) {
-      const lat = Number(field(item, ["lat", "latitude"], NaN));
-      const lng = Number(field(item, ["lng", "lon", "longitude"], NaN));
-      if (Number.isFinite(lat) && Number.isFinite(lng)) return [lat, lng];
+      const lat = Number(
+        field(item, ["lat", "latitude"], NaN)
+      );
+
+      const lng = Number(
+        field(item, ["lng", "lon", "longitude"], NaN)
+      );
+
+      if (
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        return [lat, lng];
+      }
+
       return null;
     }
 
+
     function itemId(item, keys) {
       const id = field(item, keys, "");
-      return id === "—" || id === "" ? "" : String(id);
+
+      return id === "—" || id === ""
+        ? ""
+        : String(id);
     }
 
-    function priorityColor(priority) {
-      const score = Number(priority);
-      if (score > 8) return "red";
-      if (score > 6) return "orange";
-      if (score > 4) return "yellow";
-      return "green";
-    }
-
-    function statusColor(status) {
-      const value = String(status).toLowerCase();
-      if (value === "available") return "green";
-      if (value === "assigned") return "yellow";
-      if (value === "busy") return "red";
-      return "gray";
-    }
-
-    function resourceIcon(color) {
-      return L.divIcon({
-        className: "resource-marker",
-        html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 0 1px ${color}"></span>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-      });
-    }
-
-    function pruneMarkers(dict, seenIds) {
-      Object.keys(dict).forEach((id) => {
-        if (!seenIds.has(id)) {
-          map.removeLayer(dict[id]);
-          delete dict[id];
-        }
-      });
-    }
-
-    const recState = { requestId: null, candidates: [], index: 0 };
-    let toastTimer = null;
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -358,399 +605,2588 @@
         .replace(/"/g, "&quot;");
     }
 
-    function hideRecommendationPanel() {
-      const panel = document.getElementById("recommendationPanel");
-      panel.style.display = "none";
-      panel.innerHTML = "";
-    }
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    let toastTimer = null;
 
     function showToast(message) {
-      const toast = document.getElementById("toast");
+      const toast =
+        document.getElementById("toast");
+
       toast.textContent = message;
       toast.style.display = "block";
+
       clearTimeout(toastTimer);
+
       toastTimer = setTimeout(() => {
         toast.style.display = "none";
       }, 2800);
     }
 
-    function asPercent(score) {
-      const n = Number(score);
-      if (!Number.isFinite(n)) return 0;
-      return Math.max(0, Math.min(100, n <= 1 ? n * 100 : n));
-    }
 
-    function formatScore(score) {
-      const n = Number(score);
-      if (!Number.isFinite(n)) return "—";
-      return n <= 1 ? `${Math.round(n * 100)}%` : String(n);
-    }
+    /* =========================================================
+       ROAD BLOCK MARKERS
+    ========================================================= */
 
-    function normalizeFactors(raw) {
-      if (!raw) return [];
-      if (Array.isArray(raw)) {
-        return raw.map((item) => ({
-          factor: field(item, ["factor", "name", "key"]),
-          value: field(item, ["value"]),
-          score: field(item, ["score"]),
-          weight: field(item, ["weight"]),
-        }));
-      }
-      return Object.entries(raw).map(([factor, item]) => {
-        const details = item && typeof item === "object" ? item : { value: item };
-        return {
-          factor,
-          value: field(details, ["value"], details.value ?? "—"),
-          score: field(details, ["score"]),
-          weight: field(details, ["weight"]),
-        };
+    function createRoadBlockIcon() {
+
+      return L.divIcon({
+        className: "road-block-marker",
+
+        html: `
+          <div style="
+            width:28px;
+            height:28px;
+            border-radius:50%;
+            background:#dc2626;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+            font-weight:900;
+            border:3px solid white;
+            box-shadow:0 2px 8px rgba(0,0,0,0.45);
+          ">×</div>
+        `,
+
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
       });
     }
 
-    function normalizeCandidate(raw, fallback = {}) {
-      if (!raw || typeof raw !== "object") return null;
-      const resource = raw.resource && typeof raw.resource === "object" ? raw.resource : raw;
+
+    function upsertRoadBlockMarker(block) {
+
+      const id =
+        itemId(block, [
+          "id",
+          "road_block_id",
+          "block_id"
+        ]) ||
+        `${block.lat}_${block.lng}`;
+
+      const pos = coords(block);
+
+      if (!pos) return;
+
+      const description =
+        field(
+          block,
+          ["description", "reason", "details"],
+          "Road blocked"
+        );
+
+      const popup = `
+        <strong>🚧 Road Block</strong><br>
+        Location: ${pos[0].toFixed(5)},
+        ${pos[1].toFixed(5)}<br>
+        Description: ${escapeHtml(description)}
+      `;
+
+      const existing =
+        markers.roadBlocks[id];
+
+      if (existing) {
+
+        existing.setLatLng(pos);
+        existing.setPopupContent(popup);
+
+        return;
+      }
+
+      const marker = L.marker(pos, {
+        icon: createRoadBlockIcon()
+      }).addTo(map);
+
+      marker.bindPopup(popup);
+
+      markers.roadBlocks[id] = marker;
+    }
+
+
+    function pruneRoadBlockMarkers(seenIds) {
+
+      Object.keys(markers.roadBlocks)
+        .forEach((id) => {
+
+          if (!seenIds.has(id)) {
+
+            map.removeLayer(
+              markers.roadBlocks[id]
+            );
+
+            delete markers.roadBlocks[id];
+          }
+        });
+    }
+
+
+    /* =========================================================
+       ROAD BLOCK API
+    ========================================================= */
+
+    async function pollRoadBlocks() {
+
+      try {
+
+        const res =
+          await fetch("/api/road-blocks");
+
+        if (!res.ok) {
+          throw new Error(
+            "Failed to load road blocks"
+          );
+        }
+
+        const data =
+          await res.json();
+
+        const blocks =
+          Array.isArray(data)
+            ? data
+            : (
+                data.road_blocks ||
+                data.roadBlocks ||
+                data.blocks ||
+                []
+              );
+
+        const seenIds = new Set();
+
+        blocks.forEach((block) => {
+
+          const id =
+            itemId(block, [
+              "id",
+              "road_block_id",
+              "block_id"
+            ]) ||
+            `${block.lat}_${block.lng}`;
+
+          seenIds.add(id);
+
+          upsertRoadBlockMarker(block);
+        });
+
+        pruneRoadBlockMarkers(seenIds);
+
+      } catch (err) {
+
+        console.error(
+          "Road block polling error:",
+          err
+        );
+      }
+    }
+
+
+    /* =========================================================
+       REPORT ROAD BLOCK
+    ========================================================= */
+
+    async function reportRoadBlock() {
+
+      /*
+       * First option:
+       * Ask user for coordinates.
+       */
+
+      const useMapClick =
+        confirm(
+          "Report a road block:\n\n" +
+          "Press OK to select the location on the map.\n" +
+          "Press Cancel to enter latitude/longitude manually."
+        );
+
+
+      let lat;
+      let lng;
+
+
+      if (useMapClick) {
+
+        showToast(
+          "📍 Click the blocked location on the map"
+        );
+
+        try {
+
+          const clicked =
+            await waitForMapClick();
+
+          lat = clicked.lat;
+          lng = clicked.lng;
+
+        } catch (err) {
+
+          showToast(
+            "Map selection cancelled"
+          );
+
+          return;
+        }
+
+      } else {
+
+        lat = Number(
+          prompt("Enter latitude:")
+        );
+
+        lng = Number(
+          prompt("Enter longitude:")
+        );
+
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
+        ) {
+
+          alert(
+            "Invalid latitude or longitude."
+          );
+
+          return;
+        }
+      }
+
+
+      const description =
+        prompt(
+          "Describe the road block:",
+          "Road blocked"
+        );
+
+
+      if (description === null) {
+        return;
+      }
+
+
+      /*
+       * Send to backend
+       */
+
+      try {
+
+        showToast(
+          "🚧 Reporting road block..."
+        );
+
+        const res =
+          await fetch(
+            "/api/road-block",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                lat,
+                lng,
+                description
+              })
+            }
+          );
+
+
+        if (!res.ok) {
+
+          const errorText =
+            await res.text();
+
+          throw new Error(
+            errorText ||
+            "Failed to report road block"
+          );
+        }
+
+
+        const data =
+          await res.json();
+
+
+        /*
+         * Immediately show marker
+         */
+
+        if (data.road_block) {
+
+          upsertRoadBlockMarker(
+            data.road_block
+          );
+
+        } else {
+
+          upsertRoadBlockMarker({
+            id: Date.now(),
+            lat,
+            lng,
+            description
+          });
+        }
+
+
+        showToast(
+          "🚧 Road block reported"
+        );
+
+
+        /*
+         * Backend may return:
+         *
+         * {
+         *   replan: {...}
+         * }
+         *
+         * or
+         *
+         * {
+         *   replan_suggestion: {...}
+         * }
+         */
+
+        const replan =
+          data.replan ||
+          data.replan_suggestion ||
+          data.replanSuggestion;
+
+
+        if (replan) {
+
+          showReplanPanel(
+            replan,
+            {
+              lat,
+              lng,
+              description
+            }
+          );
+
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+        showToast(
+          "❌ " + err.message
+        );
+      }
+    }
+
+
+    /*
+     * Wait for one map click.
+     */
+
+    function waitForMapClick() {
+
+      return new Promise(
+        (resolve, reject) => {
+
+          const handler =
+            function (event) {
+
+              map.off(
+                "click",
+                handler
+              );
+
+              resolve({
+                lat:
+                  event.latlng.lat,
+                lng:
+                  event.latlng.lng
+              });
+            };
+
+
+          map.once(
+            "click",
+            handler
+          );
+
+
+          /*
+           * Allow ESC to cancel.
+           */
+
+          const keyHandler =
+            function (event) {
+
+              if (event.key === "Escape") {
+
+                map.off(
+                  "click",
+                  handler
+                );
+
+                document.removeEventListener(
+                  "keydown",
+                  keyHandler
+                );
+
+                reject(
+                  new Error(
+                    "cancelled"
+                  )
+                );
+              }
+            };
+
+
+          document.addEventListener(
+            "keydown",
+            keyHandler
+          );
+        }
+      );
+    }
+
+
+    /* =========================================================
+       REPLAN STATE
+    ========================================================= */
+
+    const replanState = {
+      data: null,
+      roadBlock: null
+    };
+
+
+    function hideReplanPanel() {
+
+      const panel =
+        document.getElementById(
+          "replanPanel"
+        );
+
+      panel.style.display = "none";
+      panel.innerHTML = "";
+
+      replanState.data = null;
+      replanState.roadBlock = null;
+    }
+
+
+    /*
+     * Convert plan data into readable text.
+     *
+     * Supports:
+     * - string
+     * - array
+     * - object
+     */
+
+    function formatPlan(plan) {
+
+      if (
+        plan === null ||
+        plan === undefined
+      ) {
+        return "No plan available";
+      }
+
+
+      if (typeof plan === "string") {
+        return escapeHtml(plan);
+      }
+
+
+      if (Array.isArray(plan)) {
+
+        return plan
+          .map(
+            (item, index) =>
+              `${index + 1}. ${
+                typeof item === "object"
+                  ? JSON.stringify(
+                      item,
+                      null,
+                      2
+                    )
+                  : item
+              }`
+          )
+          .join("\n");
+      }
+
+
+      if (typeof plan === "object") {
+
+        /*
+         * If backend sends a list of assignments,
+         * make it easier to read.
+         */
+
+        return Object.entries(plan)
+          .map(
+            ([key, value]) =>
+              `${key}: ${
+                typeof value === "object"
+                  ? JSON.stringify(
+                      value,
+                      null,
+                      2
+                    )
+                  : value
+              }`
+          )
+          .join("\n");
+      }
+
+
+      return String(plan);
+    }
+
+
+    function getAffectedRequests(replan) {
+
+      const affected =
+        replan.affected_requests ??
+        replan.affectedRequests ??
+        replan.affected_request_count ??
+        replan.affectedRequestCount ??
+        0;
+
+
+      if (Array.isArray(affected)) {
+
+        return String(
+          affected.length
+        );
+      }
+
+      return String(affected);
+    }
+
+
+    function getDelay(replan) {
+
+      return field(
+        replan,
+        [
+          "delay",
+          "delay_minutes",
+          "delayMinutes",
+          "estimated_delay"
+        ],
+        "—"
+      );
+    }
+
+
+    function showReplanPanel(
+      replan,
+      roadBlock
+    ) {
+
+      replanState.data = replan;
+      replanState.roadBlock =
+        roadBlock;
+
+
+      const panel =
+        document.getElementById(
+          "replanPanel"
+        );
+
+
+      /*
+       * Backend can use either:
+       *
+       * old_plan / new_plan
+       *
+       * or:
+       *
+       * oldPlan / newPlan
+       */
+
+      const oldPlan =
+        replan.old_plan ??
+        replan.oldPlan ??
+        replan.previous_plan ??
+        replan.previousPlan ??
+        "Current plan";
+
+
+      const newPlan =
+        replan.new_plan ??
+        replan.newPlan ??
+        replan.proposed_plan ??
+        replan.proposedPlan ??
+        "New plan";
+
+
+      const explanation =
+        field(
+          replan,
+          [
+            "explanation",
+            "reason",
+            "description"
+          ],
+          "The system generated a new plan to avoid the reported road block."
+        );
+
+
+      const delay =
+        getDelay(replan);
+
+
+      const affected =
+        getAffectedRequests(
+          replan
+        );
+
+
+      panel.style.display =
+        "block";
+
+
+      panel.innerHTML = `
+
+        <div class="replan-header">
+
+          <h3>
+            🔄 Replan Suggestion
+          </h3>
+
+          <div class="replan-trigger">
+            Trigger: Road blocked
+          </div>
+
+        </div>
+
+
+        <div class="plan-container">
+
+          <div class="plan-box">
+
+            <h4>
+              Old Plan
+            </h4>
+
+            <div class="plan-content">
+              ${escapeHtml(
+                formatPlan(oldPlan)
+              )}
+            </div>
+
+          </div>
+
+
+          <div class="plan-box new-plan">
+
+            <h4>
+              New Plan
+            </h4>
+
+            <div class="plan-content">
+              ${escapeHtml(
+                formatPlan(newPlan)
+              )}
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="impact-section">
+
+          <div class="impact-grid">
+
+            <div class="impact-card">
+
+              <div class="impact-label">
+                Estimated Delay
+              </div>
+
+              <div class="impact-value">
+                ${escapeHtml(
+                  String(delay)
+                )}
+                ${
+                  String(delay) !== "—"
+                    ? " min"
+                    : ""
+                }
+              </div>
+
+            </div>
+
+
+            <div class="impact-card">
+
+              <div class="impact-label">
+                Affected Requests
+              </div>
+
+              <div class="impact-value">
+                ${escapeHtml(
+                  affected
+                )}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="explanation">
+
+          <strong>
+            Why this change?
+          </strong>
+
+          <div style="margin-top:0.35rem">
+            ${escapeHtml(
+              explanation
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="replan-actions">
+
+          <button
+            type="button"
+            id="approveReplanBtn"
+          >
+            ✅ Approve New Plan
+          </button>
+
+          <button
+            type="button"
+            id="rejectReplanBtn"
+          >
+            ❌ Reject
+          </button>
+
+        </div>
+      `;
+
+
+      document
+        .getElementById(
+          "approveReplanBtn"
+        )
+        .onclick =
+        approveReplan;
+
+
+      document
+        .getElementById(
+          "rejectReplanBtn"
+        )
+        .onclick =
+        rejectReplan;
+    }
+
+
+    /* =========================================================
+       APPROVE REPLAN
+    ========================================================= */
+
+    async function approveReplan() {
+
+      const replan =
+        replanState.data;
+
+
+      if (!replan) {
+        return;
+      }
+
+
+      const approveBtn =
+        document.getElementById(
+          "approveReplanBtn"
+        );
+
+      const rejectBtn =
+        document.getElementById(
+          "rejectReplanBtn"
+        );
+
+
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+
+
+      /*
+       * The backend can support:
+       *
+       * POST /api/road-block/apply
+       *
+       * with the new plan.
+       */
+
+      try {
+
+        const newPlan =
+          replan.new_plan ??
+          replan.newPlan ??
+          replan.proposed_plan ??
+          replan.proposedPlan;
+
+
+        const roadBlock =
+          replanState.roadBlock;
+
+
+        const res =
+          await fetch(
+            "/api/road-block/apply",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                new_plan:
+                  newPlan,
+
+                road_block:
+                  roadBlock,
+
+                replan:
+                  replan
+
+              })
+            }
+          );
+
+
+        if (!res.ok) {
+
+          const errorText =
+            await res.text();
+
+          throw new Error(
+            errorText ||
+            "Failed to apply new plan"
+          );
+        }
+
+
+        hideReplanPanel();
+
+
+        showToast(
+          "✅ New plan applied"
+        );
+
+
+        /*
+         * Refresh requests/resources
+         */
+
+        refresh();
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        showToast(
+          "❌ " + err.message
+        );
+
+
+        approveBtn.disabled =
+          false;
+
+        rejectBtn.disabled =
+          false;
+      }
+    }
+
+
+    /* =========================================================
+       REJECT REPLAN
+    ========================================================= */
+
+    function rejectReplan() {
+
+      hideReplanPanel();
+
+      showToast(
+        "❌ Replan rejected"
+      );
+    }
+
+
+    /* =========================================================
+       EXISTING RECOMMENDATION SYSTEM
+    ========================================================= */
+
+    const recState = {
+      requestId: null,
+      candidates: [],
+      index: 0
+    };
+
+
+    function hideRecommendationPanel() {
+
+      const panel =
+        document.getElementById(
+          "recommendationPanel"
+        );
+
+      panel.style.display = "none";
+      panel.innerHTML = "";
+    }
+
+
+    function priorityColor(priority) {
+
+      const score =
+        Number(priority);
+
+      if (score > 8) return "red";
+      if (score > 6) return "orange";
+      if (score > 4) return "yellow";
+
+      return "green";
+    }
+
+
+    function statusColor(status) {
+
+      const value =
+        String(status).toLowerCase();
+
+      if (value === "available")
+        return "green";
+
+      if (value === "assigned")
+        return "yellow";
+
+      if (value === "busy")
+        return "red";
+
+      return "gray";
+    }
+
+
+    function resourceIcon(color) {
+
+      return L.divIcon({
+
+        className:
+          "resource-marker",
+
+        html: `
+          <span style="
+            display:block;
+            width:16px;
+            height:16px;
+            border-radius:50%;
+            background:${color};
+            border:2px solid #fff;
+            box-shadow:0 0 0 1px ${color};
+          "></span>
+        `,
+
+        iconSize: [16, 16],
+
+        iconAnchor: [8, 8]
+      });
+    }
+
+
+    function pruneMarkers(
+      dict,
+      seenIds
+    ) {
+
+      Object.keys(dict)
+        .forEach((id) => {
+
+          if (!seenIds.has(id)) {
+
+            map.removeLayer(
+              dict[id]
+            );
+
+            delete dict[id];
+          }
+        });
+    }
+
+
+    function asPercent(score) {
+
+      const n =
+        Number(score);
+
+      if (!Number.isFinite(n))
+        return 0;
+
+      return Math.max(
+        0,
+        Math.min(
+          100,
+          n <= 1
+            ? n * 100
+            : n
+        )
+      );
+    }
+
+
+    function formatScore(score) {
+
+      const n =
+        Number(score);
+
+      if (!Number.isFinite(n))
+        return "—";
+
+      return n <= 1
+        ? `${Math.round(n * 100)}%`
+        : String(n);
+    }
+
+
+    function normalizeFactors(raw) {
+
+      if (!raw) return [];
+
+      if (Array.isArray(raw)) {
+
+        return raw.map(
+          (item) => ({
+
+            factor:
+              field(
+                item,
+                [
+                  "factor",
+                  "name",
+                  "key"
+                ]
+              ),
+
+            value:
+              field(
+                item,
+                ["value"]
+              ),
+
+            score:
+              field(
+                item,
+                ["score"]
+              ),
+
+            weight:
+              field(
+                item,
+                ["weight"]
+              )
+
+          })
+        );
+      }
+
+
+      return Object.entries(raw)
+        .map(
+          ([factor, item]) => {
+
+            const details =
+              item &&
+              typeof item === "object"
+                ? item
+                : {
+                    value: item
+                  };
+
+            return {
+
+              factor,
+
+              value:
+                field(
+                  details,
+                  ["value"],
+                  details.value ?? "—"
+                ),
+
+              score:
+                field(
+                  details,
+                  ["score"]
+                ),
+
+              weight:
+                field(
+                  details,
+                  ["weight"]
+                )
+
+            };
+          }
+        );
+    }
+
+
+    function normalizeCandidate(
+      raw,
+      fallback = {}
+    ) {
+
+      if (
+        !raw ||
+        typeof raw !== "object"
+      ) {
+        return null;
+      }
+
+
+      const resource =
+        raw.resource &&
+        typeof raw.resource === "object"
+          ? raw.resource
+          : raw;
+
+
       return {
-        resource_id: itemId(resource, ["resource_id", "id"]) || itemId(raw, ["resource_id", "id"]),
-        name: field(resource, ["name", "resource_name"], field(raw, ["name", "resource_name"])),
-        score: field(raw, ["match_score", "score"], field(resource, ["match_score", "score"])),
-        eta: field(raw, ["eta", "eta_minutes"], field(resource, ["eta", "eta_minutes"])),
-        explanation: field(raw, ["explanation"], fallback.explanation),
-        reason: field(raw, ["reason", "why"], ""),
-        factors: normalizeFactors(raw.factors || raw.factor_breakdown || fallback.factors),
+
+        resource_id:
+          itemId(
+            resource,
+            [
+              "resource_id",
+              "id"
+            ]
+          ) ||
+          itemId(
+            raw,
+            [
+              "resource_id",
+              "id"
+            ]
+          ),
+
+        name:
+          field(
+            resource,
+            [
+              "name",
+              "resource_name"
+            ],
+            field(
+              raw,
+              [
+                "name",
+                "resource_name"
+              ]
+            )
+          ),
+
+        score:
+          field(
+            raw,
+            [
+              "match_score",
+              "score"
+            ],
+            field(
+              resource,
+              [
+                "match_score",
+                "score"
+              ]
+            )
+          ),
+
+        eta:
+          field(
+            raw,
+            [
+              "eta",
+              "eta_minutes"
+            ],
+            field(
+              resource,
+              [
+                "eta",
+                "eta_minutes"
+              ]
+            )
+          ),
+
+        explanation:
+          field(
+            raw,
+            ["explanation"],
+            fallback.explanation
+          ),
+
+        reason:
+          field(
+            raw,
+            [
+              "reason",
+              "why"
+            ],
+            ""
+          ),
+
+        factors:
+          normalizeFactors(
+            raw.factors ||
+            raw.factor_breakdown ||
+            fallback.factors
+          )
+
       };
     }
 
-    function parseRecommendation(data, requestId) {
-      const payload = data.recommendation && typeof data.recommendation === "object"
-        ? data.recommendation
-        : data;
-      const primary = normalizeCandidate(payload.recommended || payload.best || payload);
-      const alts = (payload.alternatives || payload.other || []).map((alt) =>
-        normalizeCandidate(alt, payload)
-      ).filter(Boolean);
-      const candidates = [primary, ...alts].filter(Boolean);
-      return { requestId, candidates };
+
+    function parseRecommendation(
+      data,
+      requestId
+    ) {
+
+      const payload =
+        data.recommendation &&
+        typeof data.recommendation === "object"
+          ? data.recommendation
+          : data;
+
+
+      const primary =
+        normalizeCandidate(
+          payload.recommended ||
+          payload.best ||
+          payload
+        );
+
+
+      const alts =
+        (
+          payload.alternatives ||
+          payload.other ||
+          []
+        )
+          .map(
+            (alt) =>
+              normalizeCandidate(
+                alt,
+                payload
+              )
+          )
+          .filter(Boolean);
+
+
+      const candidates =
+        [
+          primary,
+          ...alts
+        ].filter(Boolean);
+
+
+      return {
+        requestId,
+        candidates
+      };
     }
 
-    function renderFactorRows(factors) {
+
+    function renderFactorRows(
+      factors
+    ) {
+
       if (!factors.length) {
-        return '<p class="empty" style="color:#64748b">No factor breakdown.</p>';
-      }
-      const rows = factors.map((f) => {
-        const pct = asPercent(f.score);
-        const weightNum = Number(f.weight);
-        const weightLabel = Number.isFinite(weightNum)
-          ? (weightNum <= 1 ? `${Math.round(weightNum * 100)}%` : String(weightNum))
-          : escapeHtml(f.weight);
+
         return `
-          <tr>
-            <td>${escapeHtml(f.factor)}</td>
-            <td>${escapeHtml(f.value)}</td>
-            <td>
-              <div class="score-cell">
-                <div class="bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
-                <span>${escapeHtml(formatScore(f.score))}</span>
-              </div>
-            </td>
-            <td>${weightLabel}</td>
-          </tr>
+          <p
+            class="empty"
+            style="color:#64748b"
+          >
+            No factor breakdown.
+          </p>
         `;
-      }).join("");
+      }
+
+
+      const rows =
+        factors
+          .map(
+            (f) => {
+
+              const pct =
+                asPercent(
+                  f.score
+                );
+
+              const weightNum =
+                Number(
+                  f.weight
+                );
+
+              const weightLabel =
+                Number.isFinite(
+                  weightNum
+                )
+                  ? (
+                      weightNum <= 1
+                        ? `${Math.round(
+                            weightNum * 100
+                          )}%`
+                        : String(
+                            weightNum
+                          )
+                    )
+                  : escapeHtml(
+                      f.weight
+                    );
+
+
+              return `
+                <tr>
+
+                  <td>
+                    ${escapeHtml(
+                      f.factor
+                    )}
+                  </td>
+
+                  <td>
+                    ${escapeHtml(
+                      f.value
+                    )}
+                  </td>
+
+                  <td>
+
+                    <div
+                      class="score-cell"
+                    >
+
+                      <div
+                        class="bar"
+                        aria-hidden="true"
+                      >
+                        <span
+                          style="
+                            width:${pct}%
+                          "
+                        ></span>
+                      </div>
+
+                      <span>
+                        ${escapeHtml(
+                          formatScore(
+                            f.score
+                          )
+                        )}
+                      </span>
+
+                    </div>
+
+                  </td>
+
+                  <td>
+                    ${weightLabel}
+                  </td>
+
+                </tr>
+              `;
+            }
+          )
+          .join("");
+
+
       return `
         <table class="factor-table">
+
           <thead>
+
             <tr>
               <th>Factor</th>
               <th>Value</th>
               <th>Score</th>
               <th>Weight</th>
             </tr>
+
           </thead>
-          <tbody>${rows}</tbody>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
         </table>
       `;
     }
 
+
     function renderRecommendationCard() {
-      const panel = document.getElementById("recommendationPanel");
-      const current = recState.candidates[recState.index];
+
+      const panel =
+        document.getElementById(
+          "recommendationPanel"
+        );
+
+
+      const current =
+        recState.candidates[
+          recState.index
+        ];
+
+
       if (!current) {
-        panel.style.display = "block";
+
+        panel.style.display =
+          "block";
+
         panel.innerHTML = `
+
           <article class="rec-card">
-            <header><h3>No recommendation</h3></header>
-            <section class="rec-section"><p>No matching resource is available.</p></section>
+
+            <header>
+              <h3>
+                No recommendation
+              </h3>
+            </header>
+
+            <section class="rec-section">
+              <p>
+                No matching resource is available.
+              </p>
+            </section>
+
           </article>
         `;
+
         return;
       }
 
-      const remainingAlts = recState.candidates.slice(recState.index + 1);
-      const altHtml = remainingAlts.length
-        ? `<ul class="alt-list">${remainingAlts.map((alt) => `
-            <li>
-              <strong>${escapeHtml(alt.name)}</strong>
-              Match ${escapeHtml(formatScore(alt.score))}
-              ${alt.reason ? `<div>${escapeHtml(alt.reason)}</div>` : ""}
-            </li>`).join("")}</ul>`
-        : '<p class="empty" style="color:#64748b">No alternatives.</p>';
 
-      panel.style.display = "block";
+      const remainingAlts =
+        recState.candidates
+          .slice(
+            recState.index + 1
+          );
+
+
+      const altHtml =
+        remainingAlts.length
+
+          ? `
+            <ul class="alt-list">
+
+              ${remainingAlts
+                .map(
+                  (alt) => `
+
+                    <li>
+
+                      <strong>
+                        ${escapeHtml(
+                          alt.name
+                        )}
+                      </strong>
+
+                      Match
+                      ${escapeHtml(
+                        formatScore(
+                          alt.score
+                        )
+                      )}
+
+                      ${
+                        alt.reason
+                          ? `
+                            <div>
+                              ${escapeHtml(
+                                alt.reason
+                              )}
+                            </div>
+                          `
+                          : ""
+                      }
+
+                    </li>
+
+                  `
+                )
+                .join("")}
+
+            </ul>
+          `
+
+          : `
+            <p
+              class="empty"
+              style="color:#64748b"
+            >
+              No alternatives.
+            </p>
+          `;
+
+
+      panel.style.display =
+        "block";
+
+
       panel.innerHTML = `
+
         <article class="rec-card">
+
           <header>
-            <h3>Recommended resource</h3>
+
+            <h3>
+              Recommended resource
+            </h3>
+
             <div class="rec-match">
-              <span>${escapeHtml(current.name)}</span>
-              <span class="rec-score">Match ${escapeHtml(formatScore(current.score))}</span>
+
+              <span>
+                ${escapeHtml(
+                  current.name
+                )}
+              </span>
+
+              <span class="rec-score">
+                Match
+                ${escapeHtml(
+                  formatScore(
+                    current.score
+                  )
+                )}
+              </span>
+
             </div>
+
           </header>
+
+
           <section class="rec-section">
-            <h4>Factor breakdown</h4>
-            ${renderFactorRows(current.factors)}
+
+            <h4>
+              Factor breakdown
+            </h4>
+
+            ${renderFactorRows(
+              current.factors
+            )}
+
           </section>
+
+
           <section class="rec-section">
-            <h4>Alternatives</h4>
+
+            <h4>
+              Alternatives
+            </h4>
+
             ${altHtml}
+
           </section>
+
+
           <section class="rec-section">
-            <h4>Explanation</h4>
-            <p class="rec-explanation">${escapeHtml(current.explanation || current.reason || "—")}</p>
+
+            <h4>
+              Explanation
+            </h4>
+
+            <p class="rec-explanation">
+
+              ${escapeHtml(
+                current.explanation ||
+                current.reason ||
+                "—"
+              )}
+
+            </p>
+
           </section>
+
+
           <div class="rec-actions">
-            <button type="button" id="approveBtn">Approve</button>
-            <button type="button" id="rejectBtn">Reject</button>
+
+            <button
+              type="button"
+              id="approveBtn"
+            >
+              Approve
+            </button>
+
+            <button
+              type="button"
+              id="rejectBtn"
+            >
+              Reject
+            </button>
+
           </div>
+
         </article>
       `;
-      document.getElementById("approveBtn").onclick = approveRecommendation;
-      document.getElementById("rejectBtn").onclick = rejectRecommendation;
+
+
+      document
+        .getElementById(
+          "approveBtn"
+        )
+        .onclick =
+        approveRecommendation;
+
+
+      document
+        .getElementById(
+          "rejectBtn"
+        )
+        .onclick =
+        rejectRecommendation;
     }
 
-    async function getRecommendation(requestId) {
-      const panel = document.getElementById("recommendationPanel");
-      recState.requestId = requestId;
-      recState.candidates = [];
+
+    async function getRecommendation(
+      requestId
+    ) {
+
+      const panel =
+        document.getElementById(
+          "recommendationPanel"
+        );
+
+
+      recState.requestId =
+        requestId;
+
+      recState.candidates =
+        [];
+
       recState.index = 0;
-      panel.style.display = "block";
+
+
+      panel.style.display =
+        "block";
+
+
       panel.innerHTML = `
+
         <article class="rec-card">
-          <header><h3>AI suggestion</h3></header>
-          <section class="rec-section"><p>Loading recommendation…</p></section>
+
+          <header>
+            <h3>
+              AI suggestion
+            </h3>
+          </header>
+
+          <section class="rec-section">
+            <p>
+              Loading recommendation…
+            </p>
+          </section>
+
         </article>
       `;
+
+
       try {
-        const res = await fetch(`/api/recommend/${encodeURIComponent(requestId)}`);
-        if (!res.ok) throw new Error("No recommendation available");
-        const data = await res.json();
-        const parsed = parseRecommendation(data, requestId);
-        recState.candidates = parsed.candidates;
+
+        const res =
+          await fetch(
+            `/api/recommend/${encodeURIComponent(
+              requestId
+            )}`
+          );
+
+
+        if (!res.ok) {
+
+          throw new Error(
+            "No recommendation available"
+          );
+        }
+
+
+        const data =
+          await res.json();
+
+
+        const parsed =
+          parseRecommendation(
+            data,
+            requestId
+          );
+
+
+        recState.candidates =
+          parsed.candidates;
+
         recState.index = 0;
+
+
         renderRecommendationCard();
+
+
       } catch (err) {
+
         panel.innerHTML = `
+
           <article class="rec-card">
-            <header><h3>AI suggestion</h3></header>
-            <section class="rec-section"><p>${escapeHtml(err.message)}</p></section>
+
+            <header>
+              <h3>
+                AI suggestion
+              </h3>
+            </header>
+
+            <section class="rec-section">
+
+              <p>
+                ${escapeHtml(
+                  err.message
+                )}
+              </p>
+
+            </section>
+
           </article>
         `;
       }
     }
+
 
     async function approveRecommendation() {
-      const current = recState.candidates[recState.index];
-      if (!current || !recState.requestId) return;
-      const approveBtn = document.getElementById("approveBtn");
-      const rejectBtn = document.getElementById("rejectBtn");
-      if (approveBtn) approveBtn.disabled = true;
-      if (rejectBtn) rejectBtn.disabled = true;
+
+      const current =
+        recState.candidates[
+          recState.index
+        ];
+
+
+      if (
+        !current ||
+        !recState.requestId
+      ) {
+        return;
+      }
+
+
+      const approveBtn =
+        document.getElementById(
+          "approveBtn"
+        );
+
+      const rejectBtn =
+        document.getElementById(
+          "rejectBtn"
+        );
+
+
+      if (approveBtn)
+        approveBtn.disabled =
+          true;
+
+      if (rejectBtn)
+        rejectBtn.disabled =
+          true;
+
+
       try {
-        const res = await fetch("/api/assign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            request_id: recState.requestId,
-            resource_id: current.resource_id,
-            eta: current.eta,
-            score: current.score,
-            explanation: current.explanation || current.reason || "",
-          }),
-        });
-        if (!res.ok) throw new Error("Assignment failed");
+
+        const res =
+          await fetch(
+            "/api/assign",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                request_id:
+                  recState.requestId,
+
+                resource_id:
+                  current.resource_id,
+
+                eta:
+                  current.eta,
+
+                score:
+                  current.score,
+
+                explanation:
+                  current.explanation ||
+                  current.reason ||
+                  ""
+
+              })
+            }
+          );
+
+
+        if (!res.ok) {
+
+          throw new Error(
+            "Assignment failed"
+          );
+        }
+
+
         hideRecommendationPanel();
-        showToast("✅ Assigned");
+
+
+        showToast(
+          "✅ Assigned"
+        );
+
+
         refresh();
+
+
       } catch (err) {
-        showToast(err.message);
-        if (approveBtn) approveBtn.disabled = false;
-        if (rejectBtn) rejectBtn.disabled = false;
+
+        showToast(
+          err.message
+        );
+
+
+        if (approveBtn)
+          approveBtn.disabled =
+            false;
+
+        if (rejectBtn)
+          rejectBtn.disabled =
+            false;
       }
     }
+
 
     function rejectRecommendation() {
-      if (recState.index + 1 < recState.candidates.length) {
+
+      if (
+        recState.index + 1 <
+        recState.candidates.length
+      ) {
+
         recState.index += 1;
+
         renderRecommendationCard();
+
         return;
       }
+
+
       hideRecommendationPanel();
-      showToast("No more alternatives");
+
+      showToast(
+        "No more alternatives"
+      );
     }
 
-    function upsertRequestMarker(req) {
-      const id = itemId(req, ["id", "request_id"]);
-      const pos = coords(req);
-      if (!id || !pos) return;
 
-      const type = field(req, ["type", "request_type", "kind"]);
-      const people = field(req, ["people", "people_count", "num_people", "count"]);
-      const priority = field(req, ["priority_score", "priority", "score"]);
-      const vulnerability = field(req, ["vulnerability", "vulnerable", "vulnerability_score"]);
-      const color = priorityColor(priority);
-      const popup = `Type: ${type}<br>People: ${people}<br>Priority: ${priority}<br>Vulnerability: ${vulnerability}`;
+    /* =========================================================
+       REQUEST MARKERS
+    ========================================================= */
 
-      const existing = markers.requests[id];
+    function upsertRequestMarker(
+      req
+    ) {
+
+      const id =
+        itemId(
+          req,
+          [
+            "id",
+            "request_id"
+          ]
+        );
+
+
+      const pos =
+        coords(req);
+
+
+      if (!id || !pos)
+        return;
+
+
+      const type =
+        field(
+          req,
+          [
+            "type",
+            "request_type",
+            "kind"
+          ]
+        );
+
+
+      const people =
+        field(
+          req,
+          [
+            "people",
+            "people_count",
+            "num_people",
+            "count"
+          ]
+        );
+
+
+      const priority =
+        field(
+          req,
+          [
+            "priority_score",
+            "priority",
+            "score"
+          ]
+        );
+
+
+      const vulnerability =
+        field(
+          req,
+          [
+            "vulnerability",
+            "vulnerable",
+            "vulnerability_score"
+          ]
+        );
+
+
+      const color =
+        priorityColor(
+          priority
+        );
+
+
+      const popup = `
+        Type: ${escapeHtml(type)}<br>
+        People: ${escapeHtml(people)}<br>
+        Priority: ${escapeHtml(priority)}<br>
+        Vulnerability: ${escapeHtml(vulnerability)}
+      `;
+
+
+      const existing =
+        markers.requests[id];
+
+
       if (existing) {
+
         existing.setLatLng(pos);
-        existing.setStyle({ color, fillColor: color });
-        existing.setPopupContent(popup);
+
+        existing.setStyle({
+          color,
+          fillColor: color
+        });
+
+        existing.setPopupContent(
+          popup
+        );
+
         return;
       }
 
-      const marker = L.circleMarker(pos, {
-        radius: 10,
-        color,
-        fillColor: color,
-        fillOpacity: 0.75,
-        weight: 2,
-      }).addTo(map);
-      marker.bindPopup(popup);
-      marker.on("click", () => getRecommendation(id));
-      markers.requests[id] = marker;
+
+      const marker =
+        L.circleMarker(
+          pos,
+          {
+            radius: 10,
+            color,
+            fillColor: color,
+            fillOpacity: 0.75,
+            weight: 2
+          }
+        ).addTo(map);
+
+
+      marker.bindPopup(
+        popup
+      );
+
+
+      marker.on(
+        "click",
+        () =>
+          getRecommendation(id)
+      );
+
+
+      markers.requests[id] =
+        marker;
     }
 
-    function upsertResourceMarker(res) {
-      const id = itemId(res, ["id", "resource_id"]);
-      const pos = coords(res);
-      if (!id || !pos) return;
 
-      const name = field(res, ["name"]);
-      const type = field(res, ["type", "kind"]);
-      const capacity = field(res, ["capacity"]);
-      const status = field(res, ["status", "state"], "available");
-      const color = statusColor(status);
-      const popup = `Name: ${name}<br>Type: ${type}<br>Capacity: ${capacity}<br>Status: ${status}`;
+    /* =========================================================
+       RESOURCE MARKERS
+    ========================================================= */
 
-      const existing = markers.resources[id];
+    function upsertResourceMarker(
+      res
+    ) {
+
+      const id =
+        itemId(
+          res,
+          [
+            "id",
+            "resource_id"
+          ]
+        );
+
+
+      const pos =
+        coords(res);
+
+
+      if (!id || !pos)
+        return;
+
+
+      const name =
+        field(
+          res,
+          ["name"]
+        );
+
+
+      const type =
+        field(
+          res,
+          [
+            "type",
+            "kind"
+          ]
+        );
+
+
+      const capacity =
+        field(
+          res,
+          ["capacity"]
+        );
+
+
+      const status =
+        field(
+          res,
+          [
+            "status",
+            "state"
+          ],
+          "available"
+        );
+
+
+      const color =
+        statusColor(
+          status
+        );
+
+
+      const popup = `
+        Name: ${escapeHtml(name)}<br>
+        Type: ${escapeHtml(type)}<br>
+        Capacity: ${escapeHtml(capacity)}<br>
+        Status: ${escapeHtml(status)}
+      `;
+
+
+      const existing =
+        markers.resources[id];
+
+
       if (existing) {
+
         existing.setLatLng(pos);
-        existing.setIcon(resourceIcon(color));
-        existing.setPopupContent(popup);
+
+        existing.setIcon(
+          resourceIcon(color)
+        );
+
+        existing.setPopupContent(
+          popup
+        );
+
         return;
       }
 
-      const marker = L.marker(pos, { icon: resourceIcon(color) }).addTo(map);
-      marker.bindPopup(popup);
-      markers.resources[id] = marker;
+
+      const marker =
+        L.marker(
+          pos,
+          {
+            icon:
+              resourceIcon(
+                color
+              )
+          }
+        ).addTo(map);
+
+
+      marker.bindPopup(
+        popup
+      );
+
+
+      markers.resources[id] =
+        marker;
     }
 
-    function renderRequests(requests) {
-      const list = document.getElementById("requestsList");
-      const seen = new Set();
 
-      if (!requests || requests.length === 0) {
-        list.innerHTML = '<p class="empty">No active requests.</p>';
-        pruneMarkers(markers.requests, seen);
+    /* =========================================================
+       REQUEST LIST
+    ========================================================= */
+
+    function renderRequests(
+      requests
+    ) {
+
+      const list =
+        document.getElementById(
+          "requestsList"
+        );
+
+
+      const seen =
+        new Set();
+
+
+      if (
+        !requests ||
+        requests.length === 0
+      ) {
+
+        list.innerHTML =
+          '<p class="empty">No active requests.</p>';
+
+        pruneMarkers(
+          markers.requests,
+          seen
+        );
+
         return;
       }
 
-      list.innerHTML = requests.map((req) => {
-        const id = itemId(req, ["id", "request_id"]);
-        if (id) seen.add(id);
-        upsertRequestMarker(req);
 
-        const type = field(req, ["type", "request_type", "kind"]);
-        const people = field(req, ["people", "people_count", "num_people", "count"]);
-        const priority = field(req, ["priority_score", "priority", "score"]);
-        const vulnerability = field(req, ["vulnerability", "vulnerable", "vulnerability_score"]);
-        return `
-          <article class="request-card">
-            <div class="type">${type}</div>
-            <div class="meta">People: ${people}</div>
-            <div class="meta">Priority: ${priority}</div>
-            <div class="meta">Vulnerability: ${vulnerability}</div>
-          </article>
-        `;
-      }).join("");
+      list.innerHTML =
+        requests
+          .map(
+            (req) => {
 
-      pruneMarkers(markers.requests, seen);
+              const id =
+                itemId(
+                  req,
+                  [
+                    "id",
+                    "request_id"
+                  ]
+                );
+
+
+              if (id)
+                seen.add(id);
+
+
+              upsertRequestMarker(
+                req
+              );
+
+
+              const type =
+                field(
+                  req,
+                  [
+                    "type",
+                    "request_type",
+                    "kind"
+                  ]
+                );
+
+
+              const people =
+                field(
+                  req,
+                  [
+                    "people",
+                    "people_count",
+                    "num_people",
+                    "count"
+                  ]
+                );
+
+
+              const priority =
+                field(
+                  req,
+                  [
+                    "priority_score",
+                    "priority",
+                    "score"
+                  ]
+                );
+
+
+              const vulnerability =
+                field(
+                  req,
+                  [
+                    "vulnerability",
+                    "vulnerable",
+                    "vulnerability_score"
+                  ]
+                );
+
+
+              return `
+
+                <article class="request-card">
+
+                  <div class="type">
+                    ${escapeHtml(type)}
+                  </div>
+
+                  <div class="meta">
+                    People:
+                    ${escapeHtml(people)}
+                  </div>
+
+                  <div class="meta">
+                    Priority:
+                    ${escapeHtml(priority)}
+                  </div>
+
+                  <div class="meta">
+                    Vulnerability:
+                    ${escapeHtml(vulnerability)}
+                  </div>
+
+                </article>
+
+              `;
+            }
+          )
+          .join("");
+
+
+      pruneMarkers(
+        markers.requests,
+        seen
+      );
     }
 
-    function renderResources(resources) {
-      const list = document.getElementById("resourcesList");
-      const seen = new Set();
 
-      if (!resources || resources.length === 0) {
-        list.innerHTML = '<p class="empty">No resources available.</p>';
-        pruneMarkers(markers.resources, seen);
+    /* =========================================================
+       RESOURCE LIST
+    ========================================================= */
+
+    function renderResources(
+      resources
+    ) {
+
+      const list =
+        document.getElementById(
+          "resourcesList"
+        );
+
+
+      const seen =
+        new Set();
+
+
+      if (
+        !resources ||
+        resources.length === 0
+      ) {
+
+        list.innerHTML =
+          '<p class="empty">No resources available.</p>';
+
+        pruneMarkers(
+          markers.resources,
+          seen
+        );
+
         return;
       }
 
-      list.innerHTML = resources.map((res) => {
-        const id = itemId(res, ["id", "resource_id"]);
-        if (id) seen.add(id);
-        upsertResourceMarker(res);
 
-        const name = field(res, ["name", "type", "id"]);
-        const type = field(res, ["type", "kind"]);
-        const capacity = field(res, ["capacity"]);
-        const status = field(res, ["status", "state"], "available");
-        return `
-          <article class="resource-card">
-            <div class="type">${name}</div>
-            <div class="meta">Type: ${type}</div>
-            <div class="meta">Capacity: ${capacity}</div>
-            <div class="meta">Status: ${status}</div>
-          </article>
-        `;
-      }).join("");
+      list.innerHTML =
+        resources
+          .map(
+            (res) => {
 
-      pruneMarkers(markers.resources, seen);
+              const id =
+                itemId(
+                  res,
+                  [
+                    "id",
+                    "resource_id"
+                  ]
+                );
+
+
+              if (id)
+                seen.add(id);
+
+
+              upsertResourceMarker(
+                res
+              );
+
+
+              const name =
+                field(
+                  res,
+                  [
+                    "name",
+                    "type",
+                    "id"
+                  ]
+                );
+
+
+              const type =
+                field(
+                  res,
+                  [
+                    "type",
+                    "kind"
+                  ]
+                );
+
+
+              const capacity =
+                field(
+                  res,
+                  ["capacity"]
+                );
+
+
+              const status =
+                field(
+                  res,
+                  [
+                    "status",
+                    "state"
+                  ],
+                  "available"
+                );
+
+
+              return `
+
+                <article class="resource-card">
+
+                  <div class="type">
+                    ${escapeHtml(name)}
+                  </div>
+
+                  <div class="meta">
+                    Type:
+                    ${escapeHtml(type)}
+                  </div>
+
+                  <div class="meta">
+                    Capacity:
+                    ${escapeHtml(capacity)}
+                  </div>
+
+                  <div class="meta">
+                    Status:
+                    ${escapeHtml(status)}
+                  </div>
+
+                </article>
+
+              `;
+            }
+          )
+          .join("");
+
+
+      pruneMarkers(
+        markers.resources,
+        seen
+      );
     }
+
+
+    /* =========================================================
+       API POLLING
+    ========================================================= */
 
     async function pollRequests() {
+
       try {
-        const res = await fetch("/api/requests");
-        if (!res.ok) throw new Error("Failed to load requests");
-        const data = await res.json();
-        const requests = Array.isArray(data) ? data : (data.requests || []);
-        renderRequests(requests);
+
+        const res =
+          await fetch(
+            "/api/requests"
+          );
+
+
+        if (!res.ok) {
+
+          throw new Error(
+            "Failed to load requests"
+          );
+        }
+
+
+        const data =
+          await res.json();
+
+
+        const requests =
+          Array.isArray(data)
+            ? data
+            : (
+                data.requests ||
+                []
+              );
+
+
+        renderRequests(
+          requests
+        );
+
+
       } catch (err) {
-        document.getElementById("requestsList").innerHTML =
-          `<p class="empty">${err.message}</p>`;
+
+        document
+          .getElementById(
+            "requestsList"
+          )
+          .innerHTML = `
+            <p class="empty">
+              ${escapeHtml(
+                err.message
+              )}
+            </p>
+          `;
       }
     }
+
 
     async function pollResources() {
+
       try {
-        const res = await fetch("/api/resources");
-        if (!res.ok) return;
-        const data = await res.json();
-        const resources = Array.isArray(data) ? data : (data.resources || []);
-        renderResources(resources);
+
+        const res =
+          await fetch(
+            "/api/resources"
+          );
+
+
+        if (!res.ok)
+          return;
+
+
+        const data =
+          await res.json();
+
+
+        const resources =
+          Array.isArray(data)
+            ? data
+            : (
+                data.resources ||
+                []
+              );
+
+
+        renderResources(
+          resources
+        );
+
+
       } catch (_) {
-        /* resources endpoint is optional */
+
+        /*
+         * Resources endpoint is optional.
+         */
+
       }
     }
 
+
     function refresh() {
+
       pollRequests();
       pollResources();
     }
 
+
+    /* =========================================================
+       EVENT HANDLERS
+    ========================================================= */
+
+    document
+      .getElementById(
+        "reportRoadBlockBtn"
+      )
+      .addEventListener(
+        "click",
+        reportRoadBlock
+      );
+
+
+    /* =========================================================
+       INITIAL LOAD
+    ========================================================= */
+
     refresh();
-    setInterval(refresh, 3000);
+
+    /*
+     * Existing requests/resources:
+     * every 3 seconds
+     */
+
+    setInterval(
+      refresh,
+      3000
+    );
+
+
+    /*
+     * Road blocks:
+     * every 5 seconds
+     */
+
+    pollRoadBlocks();
+
+    setInterval(
+      pollRoadBlocks,
+      5000
+    );
+
   </script>
 </body>
 </html>
+```
