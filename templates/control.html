@@ -89,21 +89,21 @@
       display: none;
       position: absolute;
       z-index: 1000;
-      max-width: 360px;
-      padding: 0.85rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
     #recommendationPanel {
       top: 12px;
       right: 12px;
-      background: #ecfeff;
-      border: 1px solid #22d3ee;
-      color: #164e63;
+      width: min(440px, calc(100% - 24px));
+      max-height: calc(100% - 24px);
+      overflow: auto;
     }
     #replanPanel {
       bottom: 12px;
       right: 12px;
+      max-width: 360px;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       background: #fff7ed;
       border: 1px solid #fb923c;
       color: #9a3412;
@@ -111,6 +111,144 @@
     .empty {
       color: #94a3b8;
       font-size: 0.85rem;
+    }
+    .rec-card {
+      background: #fff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.28);
+      overflow: hidden;
+      font-size: 0.88rem;
+    }
+    .rec-card header {
+      background: #0f766e;
+      color: #f0fdfa;
+      padding: 0.85rem 1rem;
+    }
+    .rec-card header h3 {
+      margin: 0 0 0.25rem;
+      font-size: 1rem;
+    }
+    .rec-match {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+    .rec-score {
+      font-weight: 700;
+      background: #ccfbf1;
+      color: #115e59;
+      border-radius: 999px;
+      padding: 0.15rem 0.6rem;
+      white-space: nowrap;
+    }
+    .rec-section {
+      padding: 0.85rem 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .rec-section h4 {
+      margin: 0 0 0.55rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .factor-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .factor-table th,
+    .factor-table td {
+      padding: 0.4rem 0.35rem;
+      text-align: left;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .factor-table th {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .score-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-width: 110px;
+    }
+    .bar {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #14b8a6, #0f766e);
+      border-radius: 999px;
+    }
+    .alt-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .alt-list li {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem 0.65rem;
+      margin-bottom: 0.4rem;
+    }
+    .alt-list strong {
+      display: block;
+    }
+    .rec-explanation {
+      margin: 0;
+      line-height: 1.45;
+      color: #334155;
+    }
+    .rec-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.85rem 1rem 1rem;
+    }
+    .rec-actions button {
+      flex: 1;
+      border: 0;
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #approveBtn {
+      background: #059669;
+      color: #fff;
+    }
+    #rejectBtn {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    #approveBtn:disabled,
+    #rejectBtn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .toast {
+      display: none;
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      z-index: 2000;
+      background: #064e3b;
+      color: #ecfdf5;
+      padding: 0.7rem 1.1rem;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      font-weight: 600;
     }
   </style>
 </head>
@@ -140,6 +278,7 @@
       </div>
     </div>
   </div>
+  <div id="toast" class="toast" role="status"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -208,19 +347,255 @@
       });
     }
 
+    const recState = { requestId: null, candidates: [], index: 0 };
+    let toastTimer = null;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function hideRecommendationPanel() {
+      const panel = document.getElementById("recommendationPanel");
+      panel.style.display = "none";
+      panel.innerHTML = "";
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.style.display = "none";
+      }, 2800);
+    }
+
+    function asPercent(score) {
+      const n = Number(score);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.min(100, n <= 1 ? n * 100 : n));
+    }
+
+    function formatScore(score) {
+      const n = Number(score);
+      if (!Number.isFinite(n)) return "—";
+      return n <= 1 ? `${Math.round(n * 100)}%` : String(n);
+    }
+
+    function normalizeFactors(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) {
+        return raw.map((item) => ({
+          factor: field(item, ["factor", "name", "key"]),
+          value: field(item, ["value"]),
+          score: field(item, ["score"]),
+          weight: field(item, ["weight"]),
+        }));
+      }
+      return Object.entries(raw).map(([factor, item]) => {
+        const details = item && typeof item === "object" ? item : { value: item };
+        return {
+          factor,
+          value: field(details, ["value"], details.value ?? "—"),
+          score: field(details, ["score"]),
+          weight: field(details, ["weight"]),
+        };
+      });
+    }
+
+    function normalizeCandidate(raw, fallback = {}) {
+      if (!raw || typeof raw !== "object") return null;
+      const resource = raw.resource && typeof raw.resource === "object" ? raw.resource : raw;
+      return {
+        resource_id: itemId(resource, ["resource_id", "id"]) || itemId(raw, ["resource_id", "id"]),
+        name: field(resource, ["name", "resource_name"], field(raw, ["name", "resource_name"])),
+        score: field(raw, ["match_score", "score"], field(resource, ["match_score", "score"])),
+        eta: field(raw, ["eta", "eta_minutes"], field(resource, ["eta", "eta_minutes"])),
+        explanation: field(raw, ["explanation"], fallback.explanation),
+        reason: field(raw, ["reason", "why"], ""),
+        factors: normalizeFactors(raw.factors || raw.factor_breakdown || fallback.factors),
+      };
+    }
+
+    function parseRecommendation(data, requestId) {
+      const payload = data.recommendation && typeof data.recommendation === "object"
+        ? data.recommendation
+        : data;
+      const primary = normalizeCandidate(payload.recommended || payload.best || payload);
+      const alts = (payload.alternatives || payload.other || []).map((alt) =>
+        normalizeCandidate(alt, payload)
+      ).filter(Boolean);
+      const candidates = [primary, ...alts].filter(Boolean);
+      return { requestId, candidates };
+    }
+
+    function renderFactorRows(factors) {
+      if (!factors.length) {
+        return '<p class="empty" style="color:#64748b">No factor breakdown.</p>';
+      }
+      const rows = factors.map((f) => {
+        const pct = asPercent(f.score);
+        const weightNum = Number(f.weight);
+        const weightLabel = Number.isFinite(weightNum)
+          ? (weightNum <= 1 ? `${Math.round(weightNum * 100)}%` : String(weightNum))
+          : escapeHtml(f.weight);
+        return `
+          <tr>
+            <td>${escapeHtml(f.factor)}</td>
+            <td>${escapeHtml(f.value)}</td>
+            <td>
+              <div class="score-cell">
+                <div class="bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
+                <span>${escapeHtml(formatScore(f.score))}</span>
+              </div>
+            </td>
+            <td>${weightLabel}</td>
+          </tr>
+        `;
+      }).join("");
+      return `
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>Factor</th>
+              <th>Value</th>
+              <th>Score</th>
+              <th>Weight</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderRecommendationCard() {
+      const panel = document.getElementById("recommendationPanel");
+      const current = recState.candidates[recState.index];
+      if (!current) {
+        panel.style.display = "block";
+        panel.innerHTML = `
+          <article class="rec-card">
+            <header><h3>No recommendation</h3></header>
+            <section class="rec-section"><p>No matching resource is available.</p></section>
+          </article>
+        `;
+        return;
+      }
+
+      const remainingAlts = recState.candidates.slice(recState.index + 1);
+      const altHtml = remainingAlts.length
+        ? `<ul class="alt-list">${remainingAlts.map((alt) => `
+            <li>
+              <strong>${escapeHtml(alt.name)}</strong>
+              Match ${escapeHtml(formatScore(alt.score))}
+              ${alt.reason ? `<div>${escapeHtml(alt.reason)}</div>` : ""}
+            </li>`).join("")}</ul>`
+        : '<p class="empty" style="color:#64748b">No alternatives.</p>';
+
+      panel.style.display = "block";
+      panel.innerHTML = `
+        <article class="rec-card">
+          <header>
+            <h3>Recommended resource</h3>
+            <div class="rec-match">
+              <span>${escapeHtml(current.name)}</span>
+              <span class="rec-score">Match ${escapeHtml(formatScore(current.score))}</span>
+            </div>
+          </header>
+          <section class="rec-section">
+            <h4>Factor breakdown</h4>
+            ${renderFactorRows(current.factors)}
+          </section>
+          <section class="rec-section">
+            <h4>Alternatives</h4>
+            ${altHtml}
+          </section>
+          <section class="rec-section">
+            <h4>Explanation</h4>
+            <p class="rec-explanation">${escapeHtml(current.explanation || current.reason || "—")}</p>
+          </section>
+          <div class="rec-actions">
+            <button type="button" id="approveBtn">Approve</button>
+            <button type="button" id="rejectBtn">Reject</button>
+          </div>
+        </article>
+      `;
+      document.getElementById("approveBtn").onclick = approveRecommendation;
+      document.getElementById("rejectBtn").onclick = rejectRecommendation;
+    }
+
     async function getRecommendation(requestId) {
       const panel = document.getElementById("recommendationPanel");
+      recState.requestId = requestId;
+      recState.candidates = [];
+      recState.index = 0;
       panel.style.display = "block";
-      panel.innerHTML = "<strong>AI suggestion</strong><p>Loading…</p>";
+      panel.innerHTML = `
+        <article class="rec-card">
+          <header><h3>AI suggestion</h3></header>
+          <section class="rec-section"><p>Loading recommendation…</p></section>
+        </article>
+      `;
       try {
         const res = await fetch(`/api/recommend/${encodeURIComponent(requestId)}`);
         if (!res.ok) throw new Error("No recommendation available");
         const data = await res.json();
-        const text = data.recommendation || data.message || JSON.stringify(data);
-        panel.innerHTML = `<strong>AI suggestion</strong><p>${text}</p>`;
+        const parsed = parseRecommendation(data, requestId);
+        recState.candidates = parsed.candidates;
+        recState.index = 0;
+        renderRecommendationCard();
       } catch (err) {
-        panel.innerHTML = `<strong>AI suggestion</strong><p>${err.message}</p>`;
+        panel.innerHTML = `
+          <article class="rec-card">
+            <header><h3>AI suggestion</h3></header>
+            <section class="rec-section"><p>${escapeHtml(err.message)}</p></section>
+          </article>
+        `;
       }
+    }
+
+    async function approveRecommendation() {
+      const current = recState.candidates[recState.index];
+      if (!current || !recState.requestId) return;
+      const approveBtn = document.getElementById("approveBtn");
+      const rejectBtn = document.getElementById("rejectBtn");
+      if (approveBtn) approveBtn.disabled = true;
+      if (rejectBtn) rejectBtn.disabled = true;
+      try {
+        const res = await fetch("/api/assign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            request_id: recState.requestId,
+            resource_id: current.resource_id,
+            eta: current.eta,
+            score: current.score,
+            explanation: current.explanation || current.reason || "",
+          }),
+        });
+        if (!res.ok) throw new Error("Assignment failed");
+        hideRecommendationPanel();
+        showToast("✅ Assigned");
+        refresh();
+      } catch (err) {
+        showToast(err.message);
+        if (approveBtn) approveBtn.disabled = false;
+        if (rejectBtn) rejectBtn.disabled = false;
+      }
+    }
+
+    function rejectRecommendation() {
+      if (recState.index + 1 < recState.candidates.length) {
+        recState.index += 1;
+        renderRecommendationCard();
+        return;
+      }
+      hideRecommendationPanel();
+      showToast("No more alternatives");
     }
 
     function upsertRequestMarker(req) {
