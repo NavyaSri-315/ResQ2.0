@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResQ2.0 - Citizen Emergency Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Top Navigation Header -->
+    <header class="navbar">
+        <div class="logo-container">
+            <span class="alert-icon">⚠️</span>
+            <h1>ResQ2.0 Citizen Hub</h1>
+        </div>
+        <div class="status-badge">
+            <span class="status-dot"></span> System Status: Active Allocation Engine
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('report-tab')">🚨 Report Emergency</button>
+        <button class="tab-btn" onclick="switchTab('tracking-tab')">⏱️ Live Status</button>
+        <button class="tab-btn" onclick="switchTab('missing-tab')">🔍 Missing Persons</button>
+        <button class="tab-btn" onclick="switchTab('shelter-tab')">🏠 Shelters & Relief</button>
+    </div>
+
+    <main class="container">
+
+        <!-- TAB 1: EMERGENCY REPORT FORM -->
+        <section id="report-tab" class="tab-content active">
+            <div class="card-grid">
+                <div class="card form-card">
+                    <h2>Transmit SOS Signal</h2>
+                    <form id="emergency-form" action="/api/report-emergency" method="POST">
+                        <div class="form-group">
+                            <label for="emergency_type">Emergency Category</label>
+                            <select id="emergency_type" name="emergency_type" required>
+                                <option value="Rescue Needed">Rescue Needed (Flood / Trapped)</option>
+                                <option value="Medical Emergency">Medical Emergency</option>
+                                <option value="Food & Water Crisis">Food & Water Shortage</option>
+                                <option value="Fire Hazard">Fire Hazard</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vulnerability">Vulnerability Level</label>
+                                <select id="vulnerability" name="vulnerability">
+                                    <option value="Standard">Standard</option>
+                                    <option value="Children">High (Children / Infants)</option>
+                                    <option value="Seniors">High (Senior Citizens)</option>
+                                    <option value="Injured">Critical (Injured / Disabled)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="people_count">People Affected</label>
+                                <input type="number" id="people_count" name="people_count" min="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location / GPS Landmark</label>
+                            <input type="text" id="location" name="location" placeholder="Street name, landmark, or click GPS..." required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Situation Details</label>
+                            <textarea id="description" name="description" rows="3" placeholder="Water levels rising rapidly, trapped on 2nd floor..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger">SEND DISTRESS SIGNAL</button>
+                    </form>
+                </div>
+
+                <!-- Info Box -->
+                <div class="card info-card">
+                    <h3>💡 Dynamic Prioritization Engine</h3>
+                    <p>Our system does not process requests purely on a first-come, first-served basis.</p>
+                    <ul>
+                        <li><strong>Urgency & Risk:</strong> Severe life risks receive top priority.</li>
+                        <li><strong>Vulnerability Boost:</strong> Children, seniors, and injured receive boosted weight.</li>
+                        <li><strong>Accessibility Rerouting:</strong> Blocked roads trigger dynamic resource reassignment.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: LIVE REQUEST TRACKING -->
+        <section id="tracking-tab" class="tab-content">
+            <h2>Active Response Tracker</h2>
+            <div id="tracking-list" class="card-list">
+                <div class="card item-card">
+                    <div class="item-header">
+                        <span class="badge">REQ-1042</span>
+                        <h3>Medical Emergency</h3>
+                        <span class="status-tag status-assigned">Assigned</span>
+                    </div>
+                    <p><strong>Location:</strong> Sector 4, Main Street</p>
+                    <p><strong>Assigned Unit:</strong> Ambulance Unit 3</p>
+                    <p><strong>ETA:</strong> ~8 mins</p>
+                    <div class="ai-explanation">
+                        <strong>AI System Explanation:</strong> High priority assigned due to senior citizen vulnerability status and critical medical urgency.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MISSING PERSONS -->
+        <section id="missing-tab" class="tab-content">
+            <div class="card-grid">
+                <div class="card form-card">
+                    <h2>Register Missing Person</h2>
+                    <form id="missing-form" action="/api/report-missing" method="POST">
+                        <div class="form-group">
+                            <label for="person_name">Full Name</label>
+                            <input type="text" id="person_name" name="person_name" placeholder="Missing person's name..." required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="age">Age</label>
+                                <input type="number" id="age" name="age" placeholder="Age">
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_seen">Last Known Location</label>
+                            <input type="text" id="last_seen" name="last_seen" placeholder="Evacuation point, street, shelter...">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Scan Shelter DB</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: SHELTERS -->
+        <section id="shelter-tab" class="tab-content">
+            <h2>Nearby Shelters & Relief Hubs</h2>
+            <div class="card-grid">
+                <div class="card shelter-card">
+                    <h3>St. Jude Community Hall</h3>
+                    <p class="subtext">1.2 km away • Accessible Road</p>
+                    <div class="capacity-bar-container">
+                        <span>Capacity: 240 / 300 Beds</span>
+                        <div class="progress-bar"><div class="progress" style="width: 80%;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        // Simple Vanilla JS tab switcher logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
